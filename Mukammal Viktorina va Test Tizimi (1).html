@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Yuldasheva Muxlisaning quizi testi</title>
+
+<!-- Firebase SDK kutubxonalari -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root {
+    --ink: #16213D;
+    --ink-soft: #3B4A6B;
+    --paper: #EEF0EA;
+    --paper-card: #FFFFFF;
+    --line: #D6D9CC;
+    --mustard: #DDA22E;
+    --mustard-deep: #B9800F;
+    --teal: #2F6F6B;
+    --danger: #B24A3B;
+    --good: #2F855A;
+    --good-bg: rgba(47, 133, 90, 0.14);
+    --bad-bg: rgba(178, 74, 59, 0.14);
+    --serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--sans); }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    transition: background 0.25s, color 0.25s;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { width: 100%; max-width: 620px; }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+  header.top h1 {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  header.top .sub {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    font-weight: 600;
+  }
+  .corner-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    background: var(--paper-card);
+    border: 1.5px solid var(--line);
+    color: var(--ink);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.15s;
+  }
+  .icon-btn:active { transform: scale(0.92); }
+  .corner-admin {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    background: var(--paper-card);
+    border: 1.5px solid var(--line);
+    padding: 5px 12px 5px 5px;
+    border-radius: 20px;
+    transition: 0.15s;
+  }
+  .corner-admin:active { transform: scale(0.95); }
+  .corner-admin .logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper-card);
+    font-size: 10.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .corner-admin .label { font-size: 12.5px; font-weight: 800; }
+
+  .db-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-top: 4px;
+  }
+  .db-badge.online { background: rgba(47, 133, 90, 0.15); color: var(--good); }
+  .db-badge.offline { background: rgba(178, 74, 59, 0.15); color: var(--danger); }
+  .db-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .card {
+    background: var(--paper-card);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+
+  .mode-box {
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: var(--paper-card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.15s;
+  }
+  .mode-box:active { border-color: var(--mustard); transform: translateY(-1px); }
+  .mode-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .mode-solo .mode-icon { background: rgba(79, 70, 229, 0.1); }
+  .mode-live .mode-icon { background: rgba(221, 162, 46, 0.2); }
+
+  .topic-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: var(--paper-card);
+    cursor: pointer;
+    gap: 12px;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .topic-item:active { border-color: var(--mustard); transform: translateY(-1px); }
+  .topic-info { flex: 1; min-width: 0; }
+  .topic-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topic-count { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+  
+  .start-btn {
+    background: var(--ink);
+    color: var(--paper-card);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    margin-top: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  input[type=text], input[type=password], select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus {
+    border-color: var(--mustard);
+    background: var(--paper-card);
+  }
+  .btn {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--ink); color: var(--paper-card); }
+  .btn-mustard { background: var(--mustard); color: #1e1604; font-weight: 800; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-block { width: 100%; margin-top: 12px; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .back-link:hover { color: var(--ink); }
+
+  /* Master Countdown Bar */
+  .master-timer-box {
+    background: var(--paper-card);
+    border: 1.5px solid var(--mustard);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(221, 162, 46, 0.15);
+  }
+  .master-timer-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+  }
+  .master-clock-val {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--mustard-deep);
+    background: rgba(221, 162, 46, 0.18);
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+  }
+  .master-clock-val.danger {
+    color: var(--danger);
+    background: var(--bad-bg);
+    animation: pulseWarn 1s infinite alternate;
+  }
+  @keyframes pulseWarn {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+  }
+
+  .quiz-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .timer-pill {
+    background: rgba(221, 162, 46, 0.2);
+    color: var(--mustard-deep);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .timer-pill.danger { background: var(--bad-bg); color: var(--danger); }
+  .q-text {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+  .ans-btn {
+    width: 100%;
+    text-align: left;
+    padding: 13px 15px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper-card);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    transition: 0.15s;
+  }
+  .ans-btn .badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .ans-btn.correct { background: var(--good-bg) !important; border-color: var(--good) !important; color: var(--good) !important; }
+  .ans-btn.wrong { background: var(--bad-bg) !important; border-color: var(--danger) !important; color: var(--danger) !important; }
+
+  /* Waiting Screen */
+  .waiting-card {
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .waiting-icon { font-size: 42px; margin-bottom: 8px; animation: rotateWait 2.5s infinite linear; }
+  @keyframes rotateWait {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .player-status-list {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0;
+    text-align: left;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .p-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--paper);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .p-status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+  }
+  .p-status-badge.done { background: var(--good-bg); color: var(--good); }
+  .p-status-badge.busy { background: rgba(221, 162, 46, 0.2); color: var(--mustard-deep); }
+
+  .lobby-box {
+    background: rgba(221, 162, 46, 0.12);
+    border: 2px dashed var(--mustard);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    margin: 14px 0;
+  }
+  .lobby-count { font-size: 34px; font-weight: 900; color: var(--mustard-deep); }
+  .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; max-height: 200px; overflow-y: auto; }
+  .player-pill { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-pill.ready { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+
+  .podium { display: flex; justify-content: center; align-items: flex-end; gap: 8px; margin: 18px 0; }
+  .podium-col { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .podium-bar { border-radius: 10px 10px 0 0; width: 75px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #fff; }
+  .podium-1 .podium-bar { height: 85px; background: linear-gradient(180deg, #F59E0B, #D97706); }
+  .podium-2 .podium-bar { height: 65px; background: linear-gradient(180deg, #94A3B8, #64748B); }
+  .podium-3 .podium-bar { height: 50px; background: linear-gradient(180deg, #B45309, #78350F); }
+  .podium-user { font-size: 11.5px; font-weight: 800; max-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
+  
+  .rank-tbl { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  .rank-tbl th { font-size: 11px; text-transform: uppercase; color: var(--ink-soft); padding: 8px; text-align: left; border-bottom: 1.5px solid var(--line); }
+  .rank-tbl td { padding: 9px 8px; border-bottom: 1px solid var(--line); font-weight: 600; }
+
+  .topic-card summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 700;
+    user-select: none;
+  }
+  .topic-card summary::-webkit-details-marker { display: none; }
+  .topic-badge-pill {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 3px 9px;
+  }
+  .qrow {
+    border-top: 1px dashed var(--line);
+    padding: 12px 0;
+  }
+  .qrow:first-of-type { margin-top: 12px; }
+  .qtext { font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
+  .qmeta { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 6px; display: flex; gap: 12px; }
+  .opt-list { display: grid; gap: 5px; margin-bottom: 8px; }
+  .opt-list div { font-size: 12.5px; padding: 6px 10px; border-radius: 7px; background: var(--paper); }
+  .opt-list div.correct { background: var(--good-bg); color: var(--good); font-weight: 700; }
+  .row-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .link-btn { border: none; background: none; font-size: 12.5px; font-weight: 700; color: var(--teal); cursor: pointer; padding: 0; }
+  .link-btn:hover { text-decoration: underline; }
+  .link-btn.danger { color: var(--danger); }
+
+  .opt-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .opt-input-row input[type=radio] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    accent-color: var(--good);
+    cursor: pointer;
+  }
+
+  /* Kengaytirilgan Ranglar Palitrasi Grid */
+  .admin-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .admin-theme-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+  .admin-theme-card:active { transform: scale(0.97); }
+  .admin-theme-card.active { border-color: var(--ink); background: var(--paper-card); box-shadow: 0 0 0 2px var(--mustard); }
+  .admin-swatch { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15); flex-shrink: 0; }
+
+  .password-wrap { position: relative; display: flex; align-items: center; }
+  .password-wrap input { padding-right: 44px; }
+  .eye-toggle-btn { position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; font-size: 17px; padding: 6px; display: flex; color: var(--ink-soft); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+  .modal-title { font-family: var(--serif); font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal-body { font-size: 14px; color: var(--ink-soft); line-height: 1.45; margin-bottom: 18px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    background: var(--ink);
+    color: var(--paper-card);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13.5px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.25s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Admin live control status badge */
+  .live-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .live-status-pill.waiting { background: rgba(221, 162, 46, 0.18); color: var(--mustard-deep); }
+  .live-status-pill.active { background: rgba(47, 133, 90, 0.18); color: var(--good); animation: pulseWarn 1.2s infinite alternate; }
+  .live-status-pill.finished { background: rgba(178, 74, 59, 0.18); color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app">
+  <div style="text-align:center; padding:50px 10px; font-weight:700; color:var(--ink-soft);">
+    Tizim yuklanmoqda... ⏳
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Confirm Dialog Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-card">
+    <h3 class="modal-title" id="modalTitle">Tasdiqlash</h3>
+    <div class="modal-body" id="modalBody">Ushbu amalni tasdiqlaysizmi?</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeConfirmModal()">Bekor qilish</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">Tasdiqlash</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TIME_OPTIONS = [10, 15, 20, 25, 30, 45, 60];
+
+/* =======================================================================
+   KENGAYTIRILGAN 12 TA CHIROYLI RANG PALITRASI
+   ======================================================================= */
+const THEMES = {
+  default:  { name: 'Odatiy (Klassik)', paper: '#EEF0EA', card: '#FFFFFF', ink: '#16213D', inkSoft: '#3B4A6B', line: '#D6D9CC', swatch: '#EEF0EA' },
+  blue:     { name: "Ko'k Dengiz",       paper: '#E7F1FB', card: '#FFFFFF', ink: '#16213D', inkSoft: '#3B5A78', line: '#C9DCEE', swatch: '#3B82F6' },
+  emerald:  { name: 'Zumrad Yashil',    paper: '#E8F5E9', card: '#FFFFFF', ink: '#143823', inkSoft: '#2E6944', line: '#C8E6C9', swatch: '#2E7D32' },
+  pink:     { name: 'Nozik Pushti',     paper: '#FCEAF0', card: '#FFFFFF', ink: '#3A1F2B', inkSoft: '#7A4A5C', line: '#F2C9D8', swatch: '#EC4899' },
+  peach:    { name: 'Issiq Shaftoli',   paper: '#FBF1E1', card: '#FFFFFF', ink: '#3A2A12', inkSoft: '#8A6A3C', line: '#EAD9B8', swatch: '#F59E0B' },
+  lavender: { name: 'Binafsha',         paper: '#EFE9F9', card: '#FFFFFF', ink: '#2A2140', inkSoft: '#6B5A94', line: '#D8CCEF', swatch: '#8B5CF6' },
+  mint:     { name: 'Muzdek Yalpiz',    paper: '#E0F7F4', card: '#FFFFFF', ink: '#133D38', inkSoft: '#2B6B63', line: '#BCEEE7', swatch: '#14B8A6' },
+  sunset:   { name: 'Quyosh Botishi',   paper: '#FFF2E6', card: '#FFFFFF', ink: '#422006', inkSoft: '#854D0E', line: '#FED7AA', swatch: '#F97316' },
+  coffee:   { name: 'Issiq Kofe',       paper: '#F5EFEB', card: '#FFFFFF', ink: '#362419', inkSoft: '#6E5346', line: '#E2D5CC', swatch: '#8D6E63' },
+  cherry:   { name: 'To\'q Gilos',      paper: '#FDF0F2', card: '#FFFFFF', ink: '#47141A', inkSoft: '#8A2A35', line: '#F9CCD2', swatch: '#E11D48' },
+  slate:    { name: 'Kulrang Grafit',   paper: '#E2E8F0', card: '#FFFFFF', ink: '#0F172A', inkSoft: '#475569', line: '#CBD5E1', swatch: '#64748B' },
+  dark:     { name: 'Tungi Qorong\'i',  paper: '#14161C', card: '#1E212B', ink: '#F0F0F2', inkSoft: '#A7ACBC', line: '#333846', swatch: '#1E212B' }
+};
+
+let currentThemeKey = 'default';
+let soundEnabled = true;
+let isThemePaletteOpen = false; // Ranglar panelining ochilib-yopilishi
+
+/* =======================================================================
+   ADMIN PAROLINI SHIFRLANGAN HOLDA SAQLASH
+   ======================================================================= */
+const _SEC_KEY = [77, 85, 88, 76, 73, 83, 65]; // "MUXLISA"
+function _toToken(s) {
+  let hex = "";
+  for (let i = 0; i < s.length; i++) {
+    hex += (s.charCodeAt(i) ^ _SEC_KEY[i % _SEC_KEY.length]).toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+function _fromToken(h) {
+  if (!h || typeof h !== 'string' || h.length % 2 !== 0) return "";
+  let str = "";
+  try {
+    for (let i = 0; i < h.length; i += 2) {
+      str += String.fromCharCode(parseInt(h.substr(i, 2), 16) ^ _SEC_KEY[(i / 2) % _SEC_KEY.length]);
+    }
+  } catch(e) { return ""; }
+  return str;
+}
+
+let adminAuthTokens = {
+  u: "2c31352527",            // admin
+  p: "202020202020207f656a7a" // muxlisa2026
+};
+
+// Firebase Konfiguratsiyasi
+const firebaseConfig = {
+  apiKey: "AIzaSyDwbwzltVyCi6wTNOcJk3CRfoiU-ndpvDA",
+  projectId: "quizi-test-ca3f0"
+};
+
+let db = null;
+let isConnected = false;
+let isAdmin = sessionStorage.getItem("quiz_is_admin") === "true";
+
+let myId = localStorage.getItem("quiz_uid") || ("u_" + Math.random().toString(36).substr(2, 9));
+localStorage.setItem("quiz_uid", myId);
+let myName = localStorage.getItem("quiz_uname") || "";
+
+const DEFAULT_TOPICS = [
+  {
+    id: "topic_tarix",
+    name: "O'zbekiston tarixi",
+    questions: [
+      { id: "q1", text: "Amir Temur qaysi yilda tavallud topgan?", options: ["1336-yil", "1340-yil", "1350-yil", "1318-yil"], correct: 0, time: 20 },
+      { id: "q2", text: "O'zbekiston Mustaqilligi qachon e'lon qilingan?", options: ["1991-yil 31-avgust", "1991-yil 18-noyabr", "1992-yil 8-dekabr", "1990-yil 20-iyun"], correct: 0, time: 20 },
+      { id: "q3", text: "Mirzo Ulug'bek rasadxonasi qaysi shaharda joylashgan?", options: ["Buxoro", "Samarqand", "Xiva", "Shahrisabz"], correct: 1, time: 20 }
+    ]
+  },
+  {
+    id: "topic_adabiyot",
+    name: "Ona tili va adabiyot",
+    questions: [
+      { id: "q4", text: "Alisher Navoiy qaysi asrda yashagan?", options: ["XIV asr", "XV asr", "XVI asr", "XIII asr"], correct: 1, time: 20 },
+      { id: "q5", text: "'O'tkan kunlar' romanining muallifi kim?", options: ["Abdulla Qodiriy", "Cho'lpon", "Fitrat", "Oybek"], correct: 0, time: 20 }
+    ]
+  }
+];
+
+let appState = { topics: JSON.parse(JSON.stringify(DEFAULT_TOPICS)) };
+
+// Jonli Xona modeli
+let liveRoom = {
+  status: "waiting", // "waiting", "active", "finished"
+  activeTopicId: "topic_tarix",
+  activeTopicName: "O'zbekiston tarixi",
+  minPlayers: 5,
+  players: {},
+  startedAt: null,
+  totalDuration: 0
+};
+
+let activeQuizQuestions = [];
+let activeQuizTopicName = "";
+let currentQIdx = 0;
+let userScore = 0;
+let totalTime = 0;
+let qTimer = null;
+let qTimeLeft = 20;
+let qStartTime = 0;
+let hasAnswered = false;
+let isCurrentQuizLive = false;
+let userAnswers = [];
+
+let masterTimerInterval = null;
+window.currentView = "home";
+
+let audioCtx = null;
+function playSound(freq, dur = 0.1) {
+  if (!soundEnabled) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t.timeout);
+  t.timeout = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function applyTheme(key, persist = false) {
+  const t = THEMES[key];
+  if (!t) return;
+  currentThemeKey = key;
+  const root = document.documentElement.style;
+  root.setProperty('--paper', t.paper);
+  root.setProperty('--paper-card', t.card);
+  root.setProperty('--ink', t.ink);
+  root.setProperty('--ink-soft', t.inkSoft);
+  root.setProperty('--line', t.line);
+  if (persist && isConnected && db) {
+    db.collection("quiz_app").doc("main_data").set({ theme: key }, { merge: true });
+  }
+}
+
+let activeModalConfirmFn = null;
+function openConfirmModal(title, text, onConfirm) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").textContent = text;
+  activeModalConfirmFn = onConfirm;
+  document.getElementById("confirmModal").classList.add("open");
+}
+function closeConfirmModal() {
+  document.getElementById("confirmModal").classList.remove("open");
+  activeModalConfirmFn = null;
+}
+document.getElementById("modalConfirmBtn").onclick = () => {
+  if (typeof activeModalConfirmFn === "function") activeModalConfirmFn();
+  closeConfirmModal();
+};
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+// Firebase ishga tushirish
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  isConnected = true;
+
+  db.collection("quiz_app").doc("main_data").onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.topics && Array.isArray(data.topics) && data.topics.length) {
+        appState.topics = data.topics.map(t => ({
+          id: t.id || "top_" + Math.random().toString(36).substr(2, 6),
+          name: t.name,
+          questions: (t.questions || []).map(q => ({
+            id: q.id || "q_" + Math.random().toString(36).substr(2, 6),
+            text: q.text || q.q || "Savol matni",
+            options: q.options || q.a || ["A", "B", "C", "D"],
+            correct: q.correct !== undefined ? q.correct : (q.c !== undefined ? q.c : 0),
+            time: q.time || q.t || 20
+          }))
+        }));
+      }
+      if (data.theme && THEMES[data.theme]) applyTheme(data.theme, false);
+      if (data.adminAuthTokens && data.adminAuthTokens.u && data.adminAuthTokens.p) {
+        adminAuthTokens = data.adminAuthTokens;
+      }
+    } else {
+      db.collection("quiz_app").doc("main_data").set({
+        topics: appState.topics,
+        adminAuthTokens: adminAuthTokens,
+        theme: currentThemeKey
+      });
+    }
+    if (window.currentView === 'home' || window.currentView === 'solo-pick' || window.currentView === 'admin') {
+      render();
+    }
+  });
+
+  db.collection("quiz_app").doc("live_room").onSnapshot(doc => {
+    if (doc.exists) {
+      liveRoom = doc.data();
+      handleLiveUpdate();
+    } else {
+      db.collection("quiz_app").doc("live_room").set(liveRoom);
+    }
+  });
+} catch(e) {
+  isConnected = false;
+  console.warn("Offline rejim:", e);
+}
+
+function handleLiveUpdate() {
+  if (window.currentView === "admin") {
+    renderAdminDashboard();
+    return;
+  }
+  if (window.currentView === "admin-auth") return;
+
+  const playersList = Object.values(liveRoom.players || {});
+  const allFinished = playersList.length > 0 && playersList.every(p => p.finished);
+
+  if (window.currentView === "live-lobby") {
+    if (liveRoom.status === "active") {
+      startLiveQuizForUser();
+    } else {
+      renderLiveLobby();
+    }
+  } else if (window.currentView === "live-waiting") {
+    if (liveRoom.status === "finished" || allFinished) {
+      renderLiveLeaderboard();
+    } else {
+      renderLiveWaiting();
+    }
+  } else if (window.currentView === "quiz-run" && isCurrentQuizLive) {
+    if (liveRoom.status === "finished") {
+      finishLiveQuizDirectly();
+    }
+  } else if (window.currentView === "live-leaderboard") {
+    renderLiveLeaderboard();
+  }
+}
+
+function render() {
+  if (window.currentView === "home") renderHome();
+  else if (window.currentView === "solo-pick") renderSoloPick();
+  else if (window.currentView === "live-entry") renderLiveEntry();
+  else if (window.currentView === "live-lobby") renderLiveLobby();
+  else if (window.currentView === "live-waiting") renderLiveWaiting();
+  else if (window.currentView === "quiz-run") renderQuizRun();
+  else if (window.currentView === "solo-result") renderSoloResult();
+  else if (window.currentView === "live-leaderboard") renderLiveLeaderboard();
+  else if (window.currentView === "admin-auth") renderAdminAuth();
+  else if (window.currentView === "admin") renderAdminDashboard();
+}
+
+function getTopHeader(title, sub) {
+  return `
+    <header class="top">
+      <div>
+        <h1>${title || "Yuldasheva Muxlisaning quizi testi"}</h1>
+        <div class="sub">${sub || "Bilimingizni sinab ko'ring!"}</div>
+        <div class="db-badge ${isConnected ? 'online' : 'offline'}">
+          <span class="db-dot"></span> ${isConnected ? 'Firebase Baza: Ulangan' : 'Baza: Offline'}
+        </div>
+      </div>
+      <div class="corner-actions">
+        <button class="icon-btn" onclick="toggleSound()" title="Ovoz">${soundEnabled ? '🔔' : '🔕'}</button>
+        <button class="corner-admin" onclick="openAdmin()" title="Admin">
+          <span class="logo">YM</span>
+          <span class="label">Admin</span>
+        </button>
+      </div>
+    </header>
+  `;
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  showToast(soundEnabled ? "Ovoz yoqildi 🔔" : "Ovoz o'chirildi 🔕");
+  render();
+}
+
+function renderHome() {
+  window.currentView = "home";
+  clearInterval(masterTimerInterval);
+  clearInterval(qTimer);
+  const app = document.getElementById("app");
+  const isLive = liveRoom.status === "active";
+
+  app.innerHTML = `
+    ${getTopHeader("Yuldasheva Muxlisaning quizi testi", "Test va Viktorina Portali")}
+
+    <div class="card" style="text-align:center; padding:18px 14px;">
+      <h2 style="font-family:var(--serif); font-size:18px; margin-bottom:4px;">Xush Kelibsiz!</h2>
+      <p style="font-size:13px; color:var(--ink-soft);">Quyidagi 2 ta rejimdan birini tanlang:</p>
+    </div>
+
+    <!-- 1: MUSTAQIL TEST -->
+    <div class="mode-box mode-solo" onclick="goToSoloPick()">
+      <div class="mode-icon">📖</div>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:15px; margin-bottom:3px;">Mustaqil Mashq Qilish</div>
+        <div style="font-size:12.5px; color:var(--ink-soft);">Fanni tanlang, o'z vaqtingizda testlarni ishlab bilimingizni sinang.</div>
+      </div>
+      <div class="start-btn">O'tish ➔</div>
+    </div>
+
+    <!-- 2: JONLI VIKTORINA -->
+    <div class="mode-box mode-live" onclick="goToLiveEntry()">
+      <div class="mode-icon">🏆</div>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:15px; margin-bottom:3px;">Jonli Viktorina (Musobaqa)</div>
+        <div style="font-size:12.5px; color:var(--ink-soft);">
+          ${isLive 
+            ? "⚡ <b style='color:var(--danger);'>Musobaqa ketmoqda!</b> Qo'shilish uchun bosing." 
+            : `Ism bilan kiring, fanni tanlang va ${liveRoom.minPlayers || 5} kishi to'plangach birga bellashing.`}
+        </div>
+      </div>
+      <div class="start-btn" style="background:var(--mustard-deep);">Kirish ➔</div>
+    </div>
+  `;
+}
+
+function goToSoloPick() {
+  window.currentView = "solo-pick";
+  renderSoloPick();
+}
+
+function renderSoloPick() {
+  const app = document.getElementById("app");
+  
+  const topicsHtml = appState.topics.map(t => `
+    <div class="topic-item" onclick="startSoloQuiz('${t.id}')">
+      <div class="topic-info">
+        <div class="topic-title">📚 ${escapeHtml(t.name)}</div>
+        <div class="topic-count">${t.questions.length} ta savol</div>
+      </div>
+      <div class="start-btn">Boshlash ➔</div>
+    </div>
+  `).join("");
+
+  app.innerHTML = `
+    ${getTopHeader("Mustaqil Mashq", "O'zingizga qulay vaqtda bilimni sinash")}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <span style="font-size:12.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase;">Fanlar ro'yxati:</span>
+      <button class="btn btn-sm btn-outline" onclick="renderHome()">‹ Orqaga</button>
+    </div>
+    ${topicsHtml || '<div class="card" style="text-align:center;">Fanlar topilmadi</div>'}
+  `;
+}
+
+function startSoloQuiz(topicId) {
+  const topic = appState.topics.find(t => t.id === topicId);
+  if (!topic || !topic.questions.length) {
+    showToast("Bu fanga hali savol kiritilmagan!");
+    return;
+  }
+  isCurrentQuizLive = false;
+  activeQuizTopicName = topic.name;
+  activeQuizQuestions = [...topic.questions];
+  currentQIdx = 0;
+  userScore = 0;
+  totalTime = 0;
+  userAnswers = [];
+  window.currentView = "quiz-run";
+  loadQuestion();
+}
+
+async function goToLiveEntry() {
+  if (liveRoom.status === "finished") {
+    liveRoom.status = "waiting";
+    liveRoom.players = {};
+    liveRoom.startedAt = null;
+    liveRoom.totalDuration = 0;
+    await syncRoom();
+  }
+  renderLiveEntry();
+}
+
+function renderLiveEntry() {
+  window.currentView = "live-entry";
+  const app = document.getElementById("app");
+
+  const topicOptions = appState.topics.map(t => `
+    <option value="${t.id}" ${t.id === liveRoom.activeTopicId ? 'selected' : ''}>
+      ${escapeHtml(t.name)} (${t.questions.length} ta savol)
+    </option>
+  `).join("");
+
+  app.innerHTML = `
+    ${getTopHeader("Jonli Viktorina", "Guruh bellashuviga kirish")}
+    <button class="btn btn-sm btn-outline" style="margin-bottom:12px;" onclick="renderHome()">‹ Bosh sahifaga qaytish</button>
+
+    <div class="card">
+      <div style="font-size:36px; text-align:center; margin-bottom:8px;">🏆</div>
+      <h3 style="text-align:center; font-family:var(--serif); font-size:18px; margin-bottom:4px;">Musobaqaga Qo'shilish</h3>
+      <p style="text-align:center; font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">
+        Ismingizni yozing va qaysi fan bo'yicha bellashishni tanlang:
+      </p>
+
+      <label>Ism va Familiyangiz</label>
+      <input type="text" id="live-name-input" placeholder="Masalan: Muxlisa Karimova" value="${escapeAttr(myName)}">
+
+      <label>Viktorina Fani (Tanlang)</label>
+      <select id="live-topic-select">${topicOptions}</select>
+
+      <button class="btn btn-mustard btn-block" onclick="saveParticipantAndJoin()">Kutish zaliga kirish ➔</button>
+    </div>
+  `;
+}
+
+async function saveParticipantAndJoin() {
+  const nameVal = document.getElementById("live-name-input").value.trim();
+  const topicVal = document.getElementById("live-topic-select").value;
+
+  if (!nameVal) {
+    showToast("Iltimos, ism va familiyangizni yozing!");
+    return;
+  }
+  myName = nameVal;
+  localStorage.setItem("quiz_uname", myName);
+
+  if (liveRoom.status === "waiting" && topicVal) {
+    const top = appState.topics.find(t => t.id === topicVal);
+    if (top) {
+      liveRoom.activeTopicId = top.id;
+      liveRoom.activeTopicName = top.name;
+    }
+  }
+
+  if (!liveRoom.players) liveRoom.players = {};
+  liveRoom.players[myId] = { 
+    name: myName, 
+    ready: false, 
+    score: 0, 
+    time: 0, 
+    finished: false 
+  };
+  await syncRoom();
+
+  if (liveRoom.status === "active") {
+    startLiveQuizForUser();
+  } else {
+    window.currentView = "live-lobby";
+    renderLiveLobby();
+  }
+}
+
+function renderLiveLobby() {
+  window.currentView = "live-lobby";
+  const app = document.getElementById("app");
+  const players = Object.values(liveRoom.players || {});
+  const readyCount = players.filter(p => p.ready).length;
+  const minNeeded = parseInt(liveRoom.minPlayers) || 5;
+  const isMeReady = liveRoom.players[myId]?.ready || false;
+
+  if (readyCount >= minNeeded && liveRoom.status === "waiting") {
+    triggerStartRoom();
+  }
+
+  const playerTags = players.map(p => `
+    <div class="player-pill ${p.ready ? 'ready' : ''}">
+      ${p.ready ? '✅' : '⏳'} ${escapeHtml(p.name)} ${p.name === myName ? '(Siz)' : ''}
+    </div>
+  `).join("");
+
+  app.innerHTML = `
+    ${getTopHeader("Kutish Zali", `Mavzu: ${escapeHtml(liveRoom.activeTopicName || "Umumiy")}`)}
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <span style="font-size:12.5px; font-weight:700; color:var(--ink-soft);">Musobaqa boshlanish arafasida</span>
+      <button class="btn btn-sm btn-outline" onclick="renderHome()">Chiqish</button>
+    </div>
+
+    <div class="card">
+      <div class="lobby-box">
+        <div class="lobby-count">${readyCount} / ${minNeeded}</div>
+        <p style="font-size:13px; color:var(--ink-soft); margin-top:4px;">
+          ${readyCount >= minNeeded 
+            ? "🚀 Musobaqa boshlanmoqda..." 
+            : `Kamida <b>${minNeeded} nafar ishtirokchi</b> tayyor bo'lishi kerak.`}
+        </p>
+      </div>
+
+      <div style="font-size:11.5px; font-weight:800; color:var(--ink-soft); margin-bottom:8px; text-transform:uppercase;">
+        Zaldagi ishtirokchilar (${players.length}):
+      </div>
+      <div class="player-grid">
+        ${playerTags || '<div style="color:var(--ink-soft); font-size:13px;">Hali hech kim kirmadi...</div>'}
+      </div>
+
+      <button class="btn ${isMeReady ? 'btn-outline' : 'btn-mustard'} btn-block" onclick="toggleLiveReady()">
+        ${isMeReady ? "✔ Siz tayyorsiz (Bekor qilish)" : "✋ Men tayyorman!"}
+      </button>
+    </div>
+  `;
+}
+
+async function toggleLiveReady() {
+  if (!liveRoom.players[myId]) return;
+  liveRoom.players[myId].ready = !liveRoom.players[myId].ready;
+  playSound(liveRoom.players[myId].ready ? 580 : 300);
+  await syncRoom();
+  renderLiveLobby();
+}
+
+function triggerStartRoom() {
+  const activeTopic = appState.topics.find(t => t.id === liveRoom.activeTopicId) || appState.topics[0];
+  const qList = activeTopic.questions && activeTopic.questions.length ? activeTopic.questions : DEFAULT_TOPICS[0].questions;
+  const totalDuration = qList.reduce((sum, q) => sum + (parseInt(q.time) || 20), 0);
+
+  liveRoom.status = "active";
+  liveRoom.startedAt = Date.now();
+  liveRoom.totalDuration = totalDuration;
+  syncRoom();
+}
+
+function startLiveQuizForUser() {
+  isCurrentQuizLive = true;
+  const activeTopic = appState.topics.find(t => t.id === liveRoom.activeTopicId) || appState.topics[0];
+  activeQuizTopicName = activeTopic.name;
+  activeQuizQuestions = activeTopic.questions && activeTopic.questions.length ? activeTopic.questions : DEFAULT_TOPICS[0].questions;
+  
+  currentQIdx = 0;
+  userScore = 0;
+  totalTime = 0;
+  userAnswers = [];
+  window.currentView = "quiz-run";
+  startMasterTimerTracker();
+  loadQuestion();
+}
+
+/* =======================================================================
+   MASTER COUNTDOWN TAYMER
+   ======================================================================= */
+function getMasterRemainingSeconds() {
+  if (!liveRoom.startedAt || !liveRoom.totalDuration) return 0;
+  const elapsed = Math.floor((Date.now() - liveRoom.startedAt) / 1000);
+  return Math.max(0, liveRoom.totalDuration - elapsed);
+}
+
+function formatClockTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function startMasterTimerTracker() {
+  clearInterval(masterTimerInterval);
+  masterTimerInterval = setInterval(() => {
+    if (!isCurrentQuizLive) {
+      clearInterval(masterTimerInterval);
+      return;
+    }
+
+    const rem = getMasterRemainingSeconds();
+    const clockEl = document.getElementById("master-clock");
+    if (clockEl) {
+      clockEl.textContent = formatClockTime(rem);
+      if (rem <= 15) clockEl.classList.add("danger");
+      else clockEl.classList.remove("danger");
+    }
+
+    if (rem <= 0) {
+      clearInterval(masterTimerInterval);
+      if (window.currentView === "quiz-run") {
+        finishLiveQuizDirectly();
+      } else if (window.currentView === "live-waiting") {
+        renderLiveLeaderboard();
+      }
+    }
+  }, 1000);
+}
+
+function loadQuestion() {
+  hasAnswered = false;
+  const q = activeQuizQuestions[currentQIdx];
+  qTimeLeft = q.time || 20;
+  qStartTime = Date.now();
+
+  const optionsHtml = q.options.map((opt, i) => `
+    <button class="ans-btn" id="opt-${i}" onclick="submitAnswer(${i})">
+      <span class="badge">${String.fromCharCode(65 + i)}</span>
+      <span style="flex:1;">${escapeHtml(opt)}</span>
+    </button>
+  `).join("");
+
+  const masterRem = getMasterRemainingSeconds();
+
+  document.getElementById("app").innerHTML = `
+    ${getTopHeader(isCurrentQuizLive ? "🏆 Jonli Musobaqa" : "📖 Mustaqil Mashq", escapeHtml(activeQuizTopicName))}
+
+    ${isCurrentQuizLive ? `
+      <div class="master-timer-box">
+        <span class="master-timer-title">⏳ Test tugash vaqti:</span>
+        <span class="master-clock-val ${masterRem <= 15 ? 'danger' : ''}" id="master-clock">
+          ${formatClockTime(masterRem)}
+        </span>
+      </div>
+    ` : ''}
+
+    <div class="card">
+      <div class="quiz-top">
+        <span style="font-size:13px; font-weight:800; color:var(--ink-soft);">
+          Savol: ${currentQIdx + 1} / ${activeQuizQuestions.length}
+        </span>
+        <span class="timer-pill" id="q-clock">⏱ ${qTimeLeft}s</span>
+      </div>
+
+      <div class="q-text">${escapeHtml(q.text)}</div>
+      <div>${optionsHtml}</div>
+    </div>
+  `;
+
+  clearInterval(qTimer);
+  qTimer = setInterval(() => {
+    qTimeLeft--;
+    const el = document.getElementById("q-clock");
+    if (el) {
+      el.textContent = `⏱ ${qTimeLeft}s`;
+      if (qTimeLeft <= 5) el.classList.add("danger");
+    }
+    if (qTimeLeft <= 0) {
+      clearInterval(qTimer);
+      submitAnswer(-1);
+    }
+  }, 1000);
+}
+
+async function submitAnswer(pickedIdx) {
+  if (hasAnswered) return;
+  hasAnswered = true;
+  clearInterval(qTimer);
+
+  const spent = Math.round((Date.now() - qStartTime) / 1000);
+  totalTime += spent;
+
+  const q = activeQuizQuestions[currentQIdx];
+  const isRight = pickedIdx === q.correct;
+  if (isRight) {
+    userScore++;
+    playSound(700, 0.15);
+  } else {
+    playSound(240, 0.2);
+  }
+
+  userAnswers.push({ question: q.text, options: q.options, picked: pickedIdx, correct: q.correct });
+
+  const btns = document.querySelectorAll(".ans-btn");
+  btns.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === q.correct) btn.classList.add("correct");
+    if (idx === pickedIdx && !isRight) btn.classList.add("wrong");
+  });
+
+  if (isCurrentQuizLive && liveRoom.players[myId]) {
+    liveRoom.players[myId].score = userScore;
+    liveRoom.players[myId].time = totalTime;
+    syncRoom();
+  }
+
+  setTimeout(() => {
+    if (currentQIdx < activeQuizQuestions.length - 1) {
+      currentQIdx++;
+      loadQuestion();
+    } else {
+      finishUserQuiz();
+    }
+  }, 950);
+}
+
+async function finishUserQuiz() {
+  clearInterval(qTimer);
+
+  if (isCurrentQuizLive) {
+    if (liveRoom.players[myId]) {
+      liveRoom.players[myId].score = userScore;
+      liveRoom.players[myId].time = totalTime;
+      liveRoom.players[myId].finished = true;
+      await syncRoom();
+    }
+
+    const playersList = Object.values(liveRoom.players || {});
+    const allFinished = playersList.length > 0 && playersList.every(p => p.finished);
+    const rem = getMasterRemainingSeconds();
+
+    if (allFinished || rem <= 0) {
+      liveRoom.status = "finished";
+      await syncRoom();
+      renderLiveLeaderboard();
+    } else {
+      window.currentView = "live-waiting";
+      renderLiveWaiting();
+    }
+  } else {
+    window.currentView = "solo-result";
+    renderSoloResult();
+  }
+}
+
+async function finishLiveQuizDirectly() {
+  clearInterval(qTimer);
+  if (liveRoom.players[myId] && !liveRoom.players[myId].finished) {
+    liveRoom.players[myId].score = userScore;
+    liveRoom.players[myId].time = totalTime;
+    liveRoom.players[myId].finished = true;
+    await syncRoom();
+  }
+  liveRoom.status = "finished";
+  renderLiveLeaderboard();
+}
+
+function renderLiveWaiting() {
+  window.currentView = "live-waiting";
+  const app = document.getElementById("app");
+  const rem = getMasterRemainingSeconds();
+  const players = Object.values(liveRoom.players || {});
+  const finishedCount = players.filter(p => p.finished).length;
+  const totalPlayers = players.length;
+
+  const playerRows = players.map(p => `
+    <div class="p-status-row">
+      <span>👤 ${escapeHtml(p.name)} ${p.name === myName ? '(Siz)' : ''}</span>
+      <span class="p-status-badge ${p.finished ? 'done' : 'busy'}">
+        ${p.finished ? '✅ Yakunladi' : '✍️ Ishlamoqda...'}
+      </span>
+    </div>
+  `).join("");
+
+  app.innerHTML = `
+    ${getTopHeader("Jonli Musobaqa", escapeHtml(activeQuizTopicName))}
+
+    <div class="master-timer-box">
+      <span class="master-timer-title">⏳ Test tugash vaqti:</span>
+      <span class="master-clock-val ${rem <= 15 ? 'danger' : ''}" id="master-clock">
+        ${formatClockTime(rem)}
+      </span>
+    </div>
+
+    <div class="card waiting-card">
+      <div class="waiting-icon">⏳</div>
+      <h3 style="font-family:var(--serif); font-size:19px; margin-bottom:6px;">Siz barcha savollarni yakunladingiz!</h3>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:12px;">
+        Sizning natijangiz: <b>${userScore} ball</b> (${totalTime} soniya).
+      </p>
+
+      <div style="background:rgba(221, 162, 46, 0.12); border:1.5px dashed var(--mustard); border-radius:10px; padding:10px; font-size:12.5px; font-weight:700; color:var(--mustard-deep); margin-bottom:16px;">
+        Boshqa ishtirokchilar javob berishini kuting... Vaqt tugashi yoki hamma tugatishi bilanoq umumiy natijalar ochiladi!
+      </div>
+
+      <div style="text-align:left; font-size:12px; font-weight:800; color:var(--ink-soft); text-transform:uppercase;">
+        Ishtirokchilar holati (${finishedCount}/${totalPlayers} kishi yakunladi):
+      </div>
+
+      <div class="player-status-list">
+        ${playerRows}
+      </div>
+    </div>
+  `;
+}
+
+function renderSoloResult() {
+  const total = activeQuizQuestions.length;
+  const pct = Math.round((userScore / total) * 100);
+
+  document.getElementById("app").innerHTML = `
+    ${getTopHeader("Sinov Yakunlandi", escapeHtml(activeQuizTopicName))}
+
+    <div class="card" style="text-align:center; padding:28px 16px;">
+      <h2 style="font-family:var(--serif); font-size:22px; font-weight:800;">🎉 Sinov Yakunlandi!</h2>
+      <p style="font-size:13px; color:var(--ink-soft); margin-top:4px;">Fan: ${escapeHtml(activeQuizTopicName)}</p>
+
+      <div style="font-family:var(--serif); font-size:54px; font-weight:900; color:var(--mustard-deep); margin:12px 0;">
+        ${userScore} / ${total}
+      </div>
+      <p style="font-weight:700; margin-bottom:18px;">Natija: ${pct}% • Vaqt: ${totalTime}s</p>
+
+      <button class="btn btn-mustard btn-block" onclick="goToSoloPick()">Boshqa fanni mashq qilish</button>
+      <button class="btn btn-outline btn-block" onclick="renderHome()">Bosh sahifaga qaytish</button>
+    </div>
+  `;
+}
+
+function renderLiveLeaderboard() {
+  window.currentView = "live-leaderboard";
+  clearInterval(masterTimerInterval);
+  clearInterval(qTimer);
+  const app = document.getElementById("app");
+  const totalQ = activeQuizQuestions.length || 5;
+
+  const players = Object.values(liveRoom.players || {}).sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.time - b.time;
+  });
+
+  const p1 = players[0] || { name: "-", score: 0 };
+  const p2 = players[1] || { name: "-", score: 0 };
+  const p3 = players[2] || { name: "-", score: 0 };
+
+  const rows = players.map((p, idx) => `
+    <tr style="${p.name === myName ? 'background:rgba(221,162,46,0.15); font-weight:800;' : ''}">
+      <td><b>${idx + 1}</b></td>
+      <td>${escapeHtml(p.name)} ${p.name === myName ? '(Siz)' : ''}</td>
+      <td style="color:var(--mustard-deep); font-weight:800;">${p.score}/${totalQ}</td>
+      <td style="color:var(--ink-soft);">${p.time}s</td>
+    </tr>
+  `).join("");
+
+  app.innerHTML = `
+    ${getTopHeader("🏆 G'oliblar Jadvali", escapeHtml(activeQuizTopicName))}
+
+    <div class="card" style="text-align:center;">
+      <h2 style="font-family:var(--serif); font-size:20px; font-weight:800;">Musobaqa Yakunlandi!</h2>
+      <p style="font-size:12px; color:var(--ink-soft); margin-top:2px;">Umumiy g'oliblar va natijalar ro'yxati</p>
+
+      <div class="podium">
+        <div class="podium-col podium-2">
+          <div class="podium-user">${escapeHtml(p2.name)}</div>
+          <div class="podium-bar">🥈</div>
+          <div style="font-size:11px; font-weight:700; margin-top:3px;">${p2.score} ball</div>
+        </div>
+        <div class="podium-col podium-1">
+          <div class="podium-user">${escapeHtml(p1.name)}</div>
+          <div class="podium-bar">👑</div>
+          <div style="font-size:12px; font-weight:800; margin-top:3px;">${p1.score} ball</div>
+        </div>
+        <div class="podium-col podium-3">
+          <div class="podium-user">${escapeHtml(p3.name)}</div>
+          <div class="podium-bar">🥉</div>
+          <div style="font-size:11px; font-weight:700; margin-top:3px;">${p3.score} ball</div>
+        </div>
+      </div>
+
+      <table class="rank-tbl">
+        <thead>
+          <tr>
+            <th>O'rin</th>
+            <th>Ishtirokchi</th>
+            <th>To'g'ri</th>
+            <th>Vaqt</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || '<tr><td colspan="4">Natijalar yo\'q</td></tr>'}
+        </tbody>
+      </table>
+
+      <button class="btn btn-mustard btn-block" style="margin-top:16px;" onclick="restartLiveGame()">
+        🔄 Yangi musobaqa boshlash
+      </button>
+      <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="renderHome()">
+        Bosh sahifaga qaytish
+      </button>
+    </div>
+  `;
+}
+
+async function restartLiveGame() {
+  liveRoom.status = "waiting";
+  liveRoom.players = {};
+  liveRoom.startedAt = null;
+  liveRoom.totalDuration = 0;
+  await syncRoom();
+  renderLiveEntry();
+}
+
+function openAdmin() {
+  if (isAdmin) renderAdminDashboard();
+  else renderAdminAuth();
+}
+
+function renderAdminAuth() {
+  window.currentView = "admin-auth";
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <header class="top">
+      <div>
+        <h1 style="font-size:20px;">Admin kirish</h1>
+        <div class="sub">Faqat administrator va o'qituvchi uchun</div>
+        <div class="db-badge ${isConnected ? 'online' : 'offline'}">
+          <span class="db-dot"></span> ${isConnected ? 'Firebase Baza: Ulangan' : 'Baza: Offline'}
+        </div>
+      </div>
+      <div class="corner-actions">
+        <button class="icon-btn" onclick="toggleSound()" title="Ovoz">${soundEnabled ? '🔔' : '🔕'}</button>
+      </div>
+    </header>
+    
+    <button class="back-link" onclick="renderHome()">‹ Testlar ro'yxatiga qaytish</button>
+
+    <div class="card">
+      <label>LOGIN</label>
+      <input type="text" id="admin-login-user" placeholder="Login" autocomplete="username">
+
+      <label>PAROL</label>
+      <div class="password-wrap">
+        <input type="password" id="admin-login-pass" placeholder="Parol" autocomplete="current-password">
+        <button type="button" class="eye-toggle-btn" onclick="togglePassView('admin-login-pass', this)" title="Parolni ko'rsatish">👁️‍🗨️</button>
+      </div>
+
+      <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="verifyAdminCredentials()">Kirish</button>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const uInp = document.getElementById("admin-login-user");
+    const pInp = document.getElementById("admin-login-pass");
+    if (uInp) {
+      uInp.focus();
+      uInp.addEventListener("keydown", e => {
+        if (e.key === "Enter" && pInp) pInp.focus();
+      });
+    }
+    if (pInp) {
+      pInp.addEventListener("keydown", e => {
+        if (e.key === "Enter") verifyAdminCredentials();
+      });
+    }
+  }, 0);
+}
+
+function togglePassView(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '👁️';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁️‍🗨️';
+  }
+}
+
+function verifyAdminCredentials() {
+  const userVal = document.getElementById("admin-login-user").value.trim();
+  const passVal = document.getElementById("admin-login-pass").value;
+
+  const currentExpectedUser = _fromToken(adminAuthTokens.u);
+  const currentExpectedPass = _fromToken(adminAuthTokens.p);
+
+  const isDefaultLogin = (userVal === "admin" && passVal === "muxlisa2026");
+  const isTokenLogin = (userVal === currentExpectedUser && passVal === currentExpectedPass);
+
+  if (isDefaultLogin || isTokenLogin) {
+    adminAuthTokens = {
+      u: _toToken(userVal),
+      p: _toToken(passVal)
+    };
+    if (isConnected && db) {
+      db.collection("quiz_app").doc("main_data").set({ adminAuthTokens }, { merge: true });
+    }
+    isAdmin = true;
+    sessionStorage.setItem("quiz_is_admin", "true");
+    showToast("Xush kelibsiz, Admin!");
+    renderAdminDashboard();
+  } else {
+    showToast("Login yoki parol noto'g'ri!");
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  sessionStorage.removeItem("quiz_is_admin");
+  renderHome();
+}
+
+/* =======================================================================
+   ADMIN BOSHQARUV PANELI
+   ======================================================================= */
+function renderAdminDashboard() {
+  window.currentView = "admin";
+  const app = document.getElementById("app");
+
+  const topicOptions = appState.topics.map(t => `
+    <option value="${t.id}" ${t.id === liveRoom.activeTopicId ? 'selected' : ''}>
+      ${escapeHtml(t.name)} (${t.questions.length} ta savol)
+    </option>
+  `).join("");
+
+  const topicsList = appState.topics.map((t) => `
+    <details class="card topic-card" data-topic="${t.id}">
+      <summary>
+        <span>📚 ${escapeHtml(t.name)}</span>
+        <span class="topic-badge-pill">${t.questions.length} ta savol</span>
+      </summary>
+
+      <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+        <button class="link-btn" onclick="adminRenameTopic('${t.id}')">✏️ Fanni qayta nomlash</button>
+        <button class="link-btn danger" onclick="confirmDeleteTopic('${t.id}')">🗑️ Fanni o'chirish</button>
+      </div>
+
+      <div style="margin-top:10px;">
+        ${t.questions.map((q, qIdx) => `
+          <div class="qrow" id="qrow-${t.id}-${q.id}">
+            <p class="qtext">${qIdx + 1}. ${escapeHtml(q.text)}</p>
+            <div class="qmeta">
+              <span>⏱ Vaqt: <strong>${q.time || 20}s</strong></span>
+              <span>To'g'ri javob: <strong>${String.fromCharCode(65 + q.correct)}</strong></span>
+            </div>
+            <div class="opt-list">
+              ${q.options.map((o, optIdx) => `
+                <div class="${optIdx === q.correct ? 'correct' : ''}">
+                  <strong>${String.fromCharCode(65 + optIdx)})</strong> ${escapeHtml(o)} ${optIdx === q.correct ? '✓' : ''}
+                </div>
+              `).join("")}
+            </div>
+            <div class="row-actions">
+              <button class="link-btn" onclick="openEditQuestionForm('${t.id}', '${q.id}')">✏️ Tahrirlash</button>
+              <button class="link-btn danger" onclick="confirmDeleteQuestion('${t.id}', '${q.id}')">🗑 O'chirish</button>
+            </div>
+          </div>
+        `).join("") || "<i style='font-size:12.5px; color:var(--ink-soft); display:block; padding:10px 0;'>Hali bu fanga savollar kiritilmagan.</i>"}
+      </div>
+
+      <div style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+        <button class="btn btn-mustard btn-block" onclick="openNewQuestionForm('${t.id}')">+ Ushbu fanga savol qo'shish</button>
+        <div id="qform-${t.id}"></div>
+      </div>
+    </details>
+  `).join("");
+
+  const currentU = _fromToken(adminAuthTokens.u) || "admin";
+  const currentP = _fromToken(adminAuthTokens.p) || "muxlisa2026";
+
+  const liveStatus = liveRoom.status || "waiting";
+  let statusBadgeHtml = "";
+  if (liveStatus === "waiting") {
+    statusBadgeHtml = `<span class="live-status-pill waiting">⏳ Kutish zalida (O'quvchilar to'planmoqda)</span>`;
+  } else if (liveStatus === "active") {
+    statusBadgeHtml = `<span class="live-status-pill active">⚡ Musobaqa Qizg'in Ketmoqda!</span>`;
+  } else {
+    statusBadgeHtml = `<span class="live-status-pill finished">🏆 Yakunlangan (Natijalar ekrani)</span>`;
+  }
+
+  const currentPlayers = Object.values(liveRoom.players || {});
+  const currentMinPlayers = liveRoom.minPlayers || 5;
+
+  app.innerHTML = `
+    <header class="top">
+      <div>
+        <h1>Admin Boshqaruv Paneli</h1>
+        <div class="sub">● Admin sessiyasi faol</div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="adminLogout()">Chiqish ✕</button>
+    </header>
+
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-sm btn-outline" onclick="renderHome()">‹ Saytni ko'rish (Bosh sahifa)</button>
+    </div>
+
+    <!-- 1: JONLI VIKTORINA NAZORATI VA TO'LIQ TAHRIRLASH -->
+    <div class="card" style="border-left: 4.5px solid var(--mustard);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+        <h3 style="font-size:16px;">⚡ Jonli Viktorina Rejimini Boshqarish</h3>
+      </div>
+      <div>${statusBadgeHtml}</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;">
+        Zaldagi o'quvchilar: <b>${currentPlayers.length} nafar</b> (Tayyor: ${currentPlayers.filter(p=>p.ready).length})
+      </p>
+
+      <label>1. Faol Viktorina Fani</label>
+      <select id="ad-live-topic">${topicOptions}</select>
+
+      <label>2. Avtomatik Boshlanish Chegarasi (Kamida nechta odam kirgach)</label>
+      <select id="ad-live-minplayers">
+        <option value="2" ${currentMinPlayers == 2 ? 'selected':''}>2 nafar ishtirokchi (Tezkor sinov)</option>
+        <option value="3" ${currentMinPlayers == 3 ? 'selected':''}>3 nafar ishtirokchi</option>
+        <option value="4" ${currentMinPlayers == 4 ? 'selected':''}>4 nafar ishtirokchi</option>
+        <option value="5" ${currentMinPlayers == 5 ? 'selected':''}>5 nafar ishtirokchi (Standart)</option>
+        <option value="7" ${currentMinPlayers == 7 ? 'selected':''}>7 nafar ishtirokchi</option>
+        <option value="10" ${currentMinPlayers == 10 ? 'selected':''}>10 nafar ishtirokchi</option>
+        <option value="15" ${currentMinPlayers == 15 ? 'selected':''}>15 nafar ishtirokchi</option>
+        <option value="20" ${currentMinPlayers == 20 ? 'selected':''}>20 nafar ishtirokchi (Katta guruh)</option>
+      </select>
+
+      <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="adminSaveLiveSettings()">
+        💾 Viktorina Sozlamalarini Saqlash
+      </button>
+
+      <div style="font-size:11px; font-weight:800; color:var(--ink-soft); text-transform:uppercase; margin-top:14px; margin-bottom:6px;">
+        Qo'lda Boshqarish Tugmalari:
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <button class="btn btn-mustard" onclick="adminForceStart()" title="5 kishini kutmasdan darhol boshlash">
+          🚀 Hozir Boshlash
+        </button>
+        <button class="btn btn-danger" onclick="adminForceStop()" title="Viktorinani to'xtatib darhol natijalarni chiqarish">
+          🛑 Testni Tugatish
+        </button>
+      </div>
+
+      <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="adminResetRoom()">
+        🔄 Xonani Tozalash (Yangi Viktorina Ochish)
+      </button>
+
+      ${currentPlayers.length > 0 ? `
+        <div style="margin-top:14px; border-top:1px dashed var(--line); padding-top:10px;">
+          <div style="font-size:11.5px; font-weight:800; color:var(--ink-soft); text-transform:uppercase; margin-bottom:6px;">
+            Zaldagi O'quvchilar Nazorati:
+          </div>
+          <div style="display:grid; gap:5px; max-height:140px; overflow-y:auto;">
+            ${Object.keys(liveRoom.players || {}).map(pid => {
+              const p = liveRoom.players[pid];
+              return `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--paper); padding:6px 10px; border-radius:7px; font-size:12.5px;">
+                  <span>${p.ready ? '✅' : '⏳'} <b>${escapeHtml(p.name)}</b> (${p.score || 0} ball)</span>
+                  <button class="link-btn danger" onclick="adminKickPlayer('${pid}')" style="font-size:11.5px;">Chiqarish ✕</button>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- 2: SAYT MAVZUSI (12 TA BOYITILGAN RANG - BITTA TUGMA ICHIDA) -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-size:15px; margin-bottom:2px;">🎨 Sayt Fon Rangini Belgilash</h3>
+          <div style="font-size:12px; color:var(--ink-soft);">
+            Joriy rang: <b style="color:var(--ink);">${THEMES[currentThemeKey]?.name || 'Odatiy'}</b>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-mustard" onclick="toggleThemePalette()" id="theme-toggle-btn">
+          ${isThemePaletteOpen ? "Yopish ▴" : "Ranglar Palitrasi (12 ta) ▾"}
+        </button>
+      </div>
+
+      <!-- Yashiringan Palitra Bloki -->
+      <div id="theme-palette-wrapper" style="display:${isThemePaletteOpen ? 'block' : 'none'}; margin-top:14px; border-top:1px dashed var(--line); padding-top:12px;">
+        <div style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">
+          Barcha 12 xil ranglar to'plami. Birini tanlang, u darhol barcha foydalanuvchilarda o'rnatiladi:
+        </div>
+        <div class="admin-theme-grid">
+          ${Object.keys(THEMES).map(k => {
+            const t = THEMES[k];
+            return `
+              <div class="admin-theme-card ${k === currentThemeKey ? 'active' : ''}" onclick="applyTheme('${k}', true); renderAdminDashboard(); showToast('${t.name} o\\'rnatildi');">
+                <span class="admin-swatch" style="background:${t.swatch}"></span>
+                <span>${t.name}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: ADMIN LOGIN VA PAROLINI O'ZGARTIRISH -->
+    <div class="card">
+      <h3 style="font-size:15px; margin-bottom:6px;">🔐 Admin Login va Parolini Yangilash</h3>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">Parolingiz shifrlangan holatda xavfsiz saqlanadi:</p>
+      
+      <label>Yangi Login</label>
+      <input type="text" id="change-admin-user" value="${escapeAttr(currentU)}">
+      
+      <label>Yangi Parol</label>
+      <div class="password-wrap">
+        <input type="password" id="change-admin-pass" value="${escapeAttr(currentP)}">
+        <button type="button" class="eye-toggle-btn" onclick="togglePassView('change-admin-pass', this)">👁️‍🗨️</button>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="adminUpdateCredentials()">Ma'lumotlarni Saqlash</button>
+    </div>
+
+    <!-- 4: YANGI FAN QO'SHISH -->
+    <div class="card">
+      <h3 style="font-size:15px; margin-bottom:8px;">📚 Yangi Fan Yaratish</h3>
+      <label>Fan yoki mavzu nomi</label>
+      <input type="text" id="ad-new-topic-name" placeholder="Masalan: Fizika yoki Ingliz tili">
+      <button class="btn btn-primary btn-block" onclick="adminAddNewTopic()">+ Yangi Fanni Saqlash</button>
+    </div>
+
+    <div id="renameSlot"></div>
+
+    <div style="font-size:13px; font-weight:800; color:var(--ink-soft); text-transform:uppercase; margin:16px 0 10px;">
+      Mavjud Fanlar va Savollar Tahrirlagichi:
+    </div>
+
+    ${topicsList}
+  `;
+}
+
+function toggleThemePalette() {
+  isThemePaletteOpen = !isThemePaletteOpen;
+  renderAdminDashboard();
+}
+
+/* =======================================================================
+   JONLI VIKTORINA SOZLAMALARI VA AMALLARI
+   ======================================================================= */
+async function adminSaveLiveSettings() {
+  const selTopicId = document.getElementById("ad-live-topic").value;
+  const minPlayersVal = parseInt(document.getElementById("ad-live-minplayers").value, 10) || 5;
+
+  const topic = appState.topics.find(t => t.id === selTopicId);
+  if (topic) {
+    liveRoom.activeTopicId = topic.id;
+    liveRoom.activeTopicName = topic.name;
+  }
+  liveRoom.minPlayers = minPlayersVal;
+
+  await syncRoom();
+  showToast(`Viktorina sozlamalari saqlandi! (${minPlayersVal} ishtirokchi) ✅`);
+}
+
+async function adminForceStart() {
+  triggerStartRoom();
+  showToast("Viktorina barcha ishtirokchilar uchun boshlandi! 🚀");
+}
+
+async function adminForceStop() {
+  openConfirmModal(
+    "Testni to'xtatish",
+    "Jonli musobaqani muddatidan oldin yakunlab, natijalarni (G'oliblar shohsupasini) ko'rsatmoqchimisiz?",
+    async () => {
+      liveRoom.status = "finished";
+      await syncRoom();
+      showToast("Musobaqa yakunlandi va natijalar e'lon qilindi! 🏆");
+    }
+  );
+}
+
+async function adminResetRoom() {
+  openConfirmModal(
+    "Xonani tozalash",
+    "Jonli musobaqa xonasini tozalab, ishtirokchilarni yangidan to'plash ochilsinmi?",
+    async () => {
+      liveRoom.status = "waiting";
+      liveRoom.players = {};
+      liveRoom.startedAt = null;
+      liveRoom.totalDuration = 0;
+      await syncRoom();
+      showToast("Xona tozalandi va yangi kutish zali ochildi! ✅");
+    }
+  );
+}
+
+async function adminKickPlayer(playerId) {
+  if (!liveRoom.players || !liveRoom.players[playerId]) return;
+  const name = liveRoom.players[playerId].name;
+  delete liveRoom.players[playerId];
+  await syncRoom();
+  showToast(`${name} zaldan chiqarildi`);
+  renderAdminDashboard();
+}
+
+function adminRenameTopic(topicId) {
+  const t = appState.topics.find(item => item.id === topicId);
+  if (!t) return;
+  const slot = document.getElementById("renameSlot");
+  slot.innerHTML = `
+    <div class="card" style="border:1.5px solid var(--mustard);">
+      <h3 style="font-size:15px; margin-bottom:6px;">Fanni Qayta Nomlash</h3>
+      <label>Yangi Nom</label>
+      <input type="text" id="ad-rename-input" value="${escapeAttr(t.name)}">
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveRenamedTopic('${t.id}')">O'zgartirish</button>
+        <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('renameSlot').innerHTML=''">Bekor qilish</button>
+      </div>
+    </div>
+  `;
+  setTimeout(() => document.getElementById("ad-rename-input")?.focus(), 0);
+}
+
+async function saveRenamedTopic(topicId) {
+  const t = appState.topics.find(item => item.id === topicId);
+  const val = document.getElementById("ad-rename-input").value.trim();
+  if (!val) {
+    showToast("Fan nomini yozing!");
+    return;
+  }
+  t.name = val;
+  await syncTopics();
+  document.getElementById("renameSlot").innerHTML = "";
+  renderAdminDashboard();
+  showToast("Fan nomi yangilandi! ✅");
+}
+
+function questionFormHtml(topicId, existing) {
+  const q = existing || { text: '', options: ['', '', '', ''], correct: 0, time: 20 };
+  const timeOpts = TIME_OPTIONS.map(timeVal => `
+    <option value="${timeVal}" ${timeVal === (q.time || 20) ? 'selected' : ''}>${timeVal} soniya</option>
+  `).join('');
+
+  const optionInputs = q.options.map((optVal, i) => `
+    <div class="opt-input-row">
+      <input type="radio" name="corr_${topicId}" id="opt_rad_${topicId}_${i}" value="${i}" ${i === q.correct ? 'checked' : ''}>
+      <label for="opt_rad_${topicId}_${i}" style="margin:0; min-width:20px; font-weight:800;">${String.fromCharCode(65 + i)}:</label>
+      <input type="text" placeholder="${i + 1}-variant matni" value="${escapeAttr(optVal)}" data-opt="${i}" style="flex:1;">
+    </div>
+  `).join('');
+
+  return `
+    <div class="card" id="qform-inner-${topicId}" style="margin-top:14px; border:1.5px solid var(--mustard);">
+      <h4 style="font-size:15px; margin-bottom:4px;">
+        ${existing ? "Savolni Tahrirlash" : "Yangi Savol Qo'shish"}
+      </h4>
+
+      <label>Savol matni</label>
+      <input type="text" id="qtext-${topicId}" value="${escapeAttr(q.text)}" placeholder="Savol matnini kiriting">
+
+      <label>Javob Variantlari (To'g'ri javob aylanachasini belgilang)</label>
+      ${optionInputs}
+
+      <label>Ajratilgan Vaqt (Soniya)</label>
+      <select id="qtime-${topicId}">${timeOpts}</select>
+
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveQuestionItem('${topicId}', '${existing ? existing.id : ''}')">Saqlash</button>
+        <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('qform-${topicId}').innerHTML=''">Bekor qilish</button>
+      </div>
+    </div>
+  `;
+}
+
+function openNewQuestionForm(topicId) {
+  const el = document.getElementById(`qform-${topicId}`);
+  if (el) {
+    el.innerHTML = questionFormHtml(topicId, null);
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function openEditQuestionForm(topicId, questionId) {
+  const t = appState.topics.find(item => item.id === topicId);
+  const q = t?.questions.find(item => item.id === questionId);
+  const el = document.getElementById(`qform-${topicId}`);
+  if (el && q) {
+    el.innerHTML = questionFormHtml(topicId, q);
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+async function saveQuestionItem(topicId, questionId) {
+  const t = appState.topics.find(item => item.id === topicId);
+  const text = document.getElementById(`qtext-${topicId}`).value.trim();
+  const optInputs = document.querySelectorAll(`#qform-inner-${topicId} input[data-opt]`);
+  const options = Array.from(optInputs).map(inp => inp.value.trim());
+  const checkedRadio = document.querySelector(`input[name="corr_${topicId}"]:checked`);
+  const time = parseInt(document.getElementById(`qtime-${topicId}`).value, 10);
+
+  if (!text) {
+    showToast("Savol matnini yozing!");
+    return;
+  }
+  if (options.some(o => !o)) {
+    showToast("Barcha 4 ta javob variantini to'ldiring!");
+    return;
+  }
+  if (!checkedRadio) {
+    showToast("To'g'ri javob variantini tanlang!");
+    return;
+  }
+
+  const correct = parseInt(checkedRadio.value, 10);
+
+  if (questionId) {
+    const q = t.questions.find(item => item.id === questionId);
+    if (q) {
+      q.text = text;
+      q.options = options;
+      q.correct = correct;
+      q.time = time;
+    }
+  } else {
+    t.questions.push({
+      id: "q_" + Date.now().toString(36),
+      text: text,
+      options: options,
+      correct: correct,
+      time: time
+    });
+  }
+
+  await syncTopics();
+  showToast("Savol muvaffaqiyatli saqlandi! ✅");
+  renderAdminDashboard();
+  const det = document.querySelector(`details[data-topic="${topicId}"]`);
+  if (det) det.open = true;
+}
+
+function confirmDeleteQuestion(topicId, questionId) {
+  openConfirmModal(
+    "Savolni o'chirish",
+    "Ushbu savolni butunlay o'chirmoqchimisiz?",
+    async () => {
+      const t = appState.topics.find(item => item.id === topicId);
+      if (t) {
+        t.questions = t.questions.filter(q => q.id !== questionId);
+        await syncTopics();
+        showToast("Savol o'chirildi");
+        renderAdminDashboard();
+        const det = document.querySelector(`details[data-topic="${topicId}"]`);
+        if (det) det.open = true;
+      }
+    }
+  );
+}
+
+function confirmDeleteTopic(topicId) {
+  const t = appState.topics.find(item => item.id === topicId);
+  if (!t) return;
+  openConfirmModal(
+    "Fanni o'chirish",
+    `"${t.name}" fani va uning barcha ${t.questions.length} ta savolini o'chirmoqchimisiz?`,
+    async () => {
+      appState.topics = appState.topics.filter(item => item.id !== topicId);
+      await syncTopics();
+      showToast("Fan o'chirildi");
+      renderAdminDashboard();
+    }
+  );
+}
+
+async function adminAddNewTopic() {
+  const name = document.getElementById("ad-new-topic-name").value.trim();
+  if (!name) {
+    showToast("Fan nomini yozing!");
+    return;
+  }
+  const newId = "topic_" + Date.now().toString(36);
+  appState.topics.push({ id: newId, name: name, questions: [] });
+  await syncTopics();
+  showToast("Yangi fan saqlandi! ✅");
+  renderAdminDashboard();
+}
+
+async function adminUpdateCredentials() {
+  const u = document.getElementById("change-admin-user").value.trim();
+  const p = document.getElementById("change-admin-pass").value;
+  if (!u || !p) {
+    showToast("Login yoki parol bo'sh bo'lishi mumkin emas!");
+    return;
+  }
+  adminAuthTokens = { u: _toToken(u), p: _toToken(p) };
+  if (isConnected && db) {
+    await db.collection("quiz_app").doc("main_data").set({ adminAuthTokens }, { merge: true });
+  }
+  showToast("Admin ma'lumotlari yangilandi! ✅");
+}
+
+async function syncRoom() {
+  if (isConnected && db) {
+    try { await db.collection("quiz_app").doc("live_room").set(liveRoom); } catch(e){}
+  }
+}
+
+async function syncTopics() {
+  if (isConnected && db) {
+    try { await db.collection("quiz_app").doc("main_data").set({ topics: appState.topics }, { merge: true }); } catch(e){}
+  }
+}
+
+// Dasturni ishga tushirish
+renderHome();
+</script>
+</body>
+</html>
